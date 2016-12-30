@@ -55,8 +55,10 @@
 
 `python Models_evaluation.py <path_to_models_folder> <vocabulary.txt> n output_file`
 
-
-
+Станом на 30.12.2016 протестовано 17 моделей:
+> 8 Уберкорпус 
+> 8 Художня література
+> 1 Новини
 
 
 
