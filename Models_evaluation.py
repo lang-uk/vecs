@@ -25,17 +25,17 @@ def questions_reading(questions_file):
     themes = []
     
     # read all questions
-    with open(questions_file, "rb") as analogy_f:
+    with open(questions_file, "r") as analogy_f:
             for line in analogy_f:
                 questions.append(line)
 
-    for i in xrange(len(questions)):
-        if questions[i].startswith(b":"):
+    for i in range(len(questions)):
+        if questions[i].startswith(":"):
             themes.append([questions[i].split("\t")[0], i])
 
     # split by themes
     category_questions = dict()
-    for t in xrange(len(themes)):
+    for t in range(len(themes)):
         try:
             category_questions[themes[t][0]] = questions[(themes[t][1]+1):themes[t+1][1]]
         except:
@@ -61,7 +61,7 @@ def model_testing(models_path, category_questions, first_n):
     print("Models loading...")
     models = dict()
     for i in onlyfiles:
-        models[i.replace(".", "_")] = gensim.models.Word2Vec.load_word2vec_format(models_path+i)   
+        models[i.replace(".", "_")] = gensim.models.keyedvectors.load_word2vec_format(models_path+i, binary=False)
     models
     print("Models evaluation...")
 
