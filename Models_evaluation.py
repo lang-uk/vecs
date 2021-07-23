@@ -58,20 +58,20 @@ def model_testing(models_path, category_questions, first_n):
     
     # read folder with models
     onlyfiles = [f for f in listdir(models_path) if isfile(join(models_path, f))]
-    print "Models loading..."
+    print("Models loading...")
     models = dict()
     for i in onlyfiles:
         models[i.replace(".", "_")] = gensim.models.Word2Vec.load_word2vec_format(models_path+i)   
     models
-    print "Models evaluation..."
+    print("Models evaluation...")
 
 
     # for each model 
     for name, model in models.items():
-        print "-------------------------------------------------------"
-        print "-------------------------------------------------------"
-        print "-------------------------------------------------------"
-        print "Model = ", name
+        print("-------------------------------------------------------")
+        print("-------------------------------------------------------")
+        print("-------------------------------------------------------")
+        print("Model = ", name)
         
         # for each question
         for key, questions in category_questions.items():        
@@ -110,11 +110,11 @@ def model_testing(models_path, category_questions, first_n):
                 # calculate accuracy: number of correct answers divided by number of all questions
                 acc = (float(n)/float(m))*100.0        
                 acc_general = (float(n)/float(len(questions)))*100.0  
-                print "Type of question = {},   Accuracy1  = {}    (if question's words are in vocabulary)".format(key, acc)
-                print "Type of question = {},   Accuracy2  = {}    (for all questions)".format(key, acc_general)
+                print("Type of question = {},   Accuracy1  = {}    (if question's words are in vocabulary)".format(key, acc))
+                print("Type of question = {},   Accuracy2  = {}    (for all questions)".format(key, acc_general))
                 result.loc[len(result)] = [name, key.split(" ")[1], acc, acc_general, '', len(questions), m]
             else:            
-                print "There are no words in vocabulary for type of questions = ", key
+                print("There are no words in vocabulary for type of questions = ", key)
                 result.loc[len(result)] = [name, key.split(" ")[1], '', '', '+', len(questions), m]
     return result
 
