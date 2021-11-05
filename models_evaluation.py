@@ -1,12 +1,15 @@
-# coding: utf-8
+from os import listdir
+from os.path import isfile, join
+import sys
+import argparse
+import logging
+import pathlib
 
 import gensim
 import pandas as pd
 
-from os import listdir
-from os.path import isfile, join
-import sys
 
+logger = logging.getLogger("fasttext")
 
 # sample how to run
 # python Models_evaluation.py ./models_fiction/ test_vocabulary.txt 4 result_fiction.csv
@@ -22,6 +25,7 @@ def questions_reading(questions_file):
     questions = []
     themes = []
 
+    # TODO: this is weird and obscure, better code would be hood
     # read all questions
     with open(questions_file, "r") as analogy_f:
         for line in analogy_f:
@@ -36,7 +40,8 @@ def questions_reading(questions_file):
     for t in range(len(themes)):
         try:
             category_questions[themes[t][0]] = questions[(themes[t][1] + 1) : themes[t + 1][1]]
-        except:
+        except Exception as e:
+            print(e)
             category_questions[themes[t][0]] = questions[(themes[t][1] + 1) :]
 
     # transform
@@ -68,8 +73,10 @@ def model_testing(models_path, category_questions, first_n):
     print("Models loading...")
     models = dict()
     for i in onlyfiles:
+        # TODO: Ideally here we should check the file extension and load binary fb vectors or textual w2v
         models[i.replace(".", "_")] = gensim.models.fasttext.load_facebook_vectors(models_path + i)
-    models
+
+    # TODO: urgent, do not load all at once move that loading to the loop below    
     print("Models evaluation...")
 
     # for each model
@@ -83,8 +90,15 @@ def model_testing(models_path, category_questions, first_n):
         for key, questions in category_questions.items():
             n = 0
             m = len(questions)
+            # TODO: validate how many tasks for each category do we have?
             for i in range(len(questions)):
                 try:
+                    # TODO: Do we need a dataframe here?
+                    # Things to look at: https://radimrehurek.com/gensim/models/keyedvectors.html#why-use-keyedvectors-instead-of-a-full-model
+                    # https://radimrehurek.com/gensim/models/keyedvectors.html#gensim.models.keyedvectors.KeyedVectors.most_similar
+                    # it seems that by default it returns first 10 similar words.
+                    # This means, that for the first_n < 10 it's inefficient, for thet first_n > 10 it simply doesn't work correctly (we don't care much but still)
+                    # Also most_similar has more params to look into and investigate
                     sim = pd.DataFrame(
                         model.most_similar(
                             positive=[questions[i][0], questions[i][3]],
@@ -101,6 +115,8 @@ def model_testing(models_path, category_questions, first_n):
                         n = n + 1
                     else:
                         try:
+                            # TODO: doublecheck if that contributes any boost to the score on our vectors
+                            # If not: make it optional and disabled by default
                             sim = pd.DataFrame(
                                 model.most_similar(
                                     positive=[
@@ -109,6 +125,7 @@ def model_testing(models_path, category_questions, first_n):
                                     ],
                                     negative=[questions[i][2].lower()],
                                 )
+                            # TODO: :4 is cleary a bug and should be :first_n
                             )[:4][0].values
                             if questions[i][1].lower() in sim or questions[i][1].lower() in [s.lower() for s in sim]:
                                 n = n + 1
@@ -121,6 +138,7 @@ def model_testing(models_path, category_questions, first_n):
                 except Exception as e:
                     print(e)
                     try:
+                        # TODO: verify when and how often does it happen
                         sim = pd.DataFrame(
                             model.most_similar(
                                 positive=[
@@ -129,6 +147,7 @@ def model_testing(models_path, category_questions, first_n):
                                 ],
                                 negative=[questions[i][2].lower()],
                             )
+                        # TODO: same problem as above
                         )[:4][0].values
                         if questions[i][1].lower() in sim or questions[i][1].lower() in [s.lower() for s in sim]:
                             n = n + 1
@@ -156,17 +175,30 @@ def model_testing(models_path, category_questions, first_n):
 
 
 if __name__ == "__main__":
-    # arguments reading
-    models_path = sys.argv[1]
-    questions_file = sys.argv[2]
-    first_n = sys.argv[3]
-    file_output = sys.argv[4]
+    parser = argparse.ArgumentParser(
+        description="Perform intrinsic evaluation of word vectors using gensim. You can evaluate more than one model"
+    )
+    parser.add_argument("--questions", type=pathlib.Path, help="Path to the file with test questions", default=pathlib.Path("test/test_vocabulary.txt"))
+    parser.add_argument("--first_n", type=int, help="Number of variants to look into", default=4)
+    parser.add_argument("models_path", type=pathlib.Path, help="Path to models for validation")
+    parser.add_argument("results", type=pathlib.Path, help="File to store results too (csv)")
+    parser.add_argument(
+        "--verbosity",
+        type=int,
+        default=1,
+        choices=(0, 1, 2, 3),
+        help="Level of verbosity",
+    )
+    args = parser.parse_args()
+
+    logging.basicConfig(format="%(name)s:%(levelname)s %(asctime)s %(message)s")
 
     # questions reading and parsing
-    category_questions = questions_reading(questions_file)
+    category_questions = questions_reading(args.questions)
+    # print(category_questions)
 
-    # model testing
-    df_output = model_testing(models_path, category_questions, int(first_n))
+#     # model testing
+#     df_output = model_testing(models_path, category_questions, int(first_n))
 
-    # results saving
-    df_output.to_csv(file_output, index=False)
+#     # results saving
+#     df_output.to_csv(file_output, index=False)
