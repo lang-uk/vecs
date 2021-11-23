@@ -152,7 +152,7 @@ if __name__ == "__main__":
         description="Perform intrinsic evaluation of word vectors using gensim. You can evaluate more than one model"
     )
     parser.add_argument("--questions", type=pathlib.Path, help="Path to the file with test questions",
-                        default=pathlib.Path("trial.txt"))
+                        default=pathlib.Path("test/test_vocabulary.py"))
     parser.add_argument("--first_n", type=int, help="Number of variants to look into", default=4)
     parser.add_argument("models_path", type=str, help="Path to models for validation")
     parser.add_argument("results", type=pathlib.Path, help="File to store results too (csv)")
