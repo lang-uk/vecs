@@ -6,10 +6,8 @@ import itertools
 import csv
 import glob
 import traceback
-import ntpath
-from os.path import isfile
+from os import path
 from collections import defaultdict
-
 
 logger = logging.getLogger("fasttext")
 
@@ -24,11 +22,11 @@ def questions_reading(analogies):
     with open(analogies, "r") as analogy_f:
         key = None
         for line in map(str.strip, analogy_f):
-            if not line.strip():
+            if not line:
                 continue
             if line.startswith(":"):
                 # new section starts
-                key = line.rstrip()
+                key = line
             else:
                 analogy_dict[key].append(line.split("\t"))
     return analogy_dict
@@ -50,9 +48,9 @@ def analogy_evaluation(models_path, analogies, first_n, file_out):
     writer.writerow(header)
 
     for file in glob.glob(models_path):
-        if not isfile(file):
+        if not path.isfile(file):
             continue
-        name = ntpath.basename(file).replace(".", "_")
+        name = path.basename(file).replace(".", "_")
         logger.info(f"Model {name} loading...")
 
         # TODO: Ideally here we should check the file extension and load binary fb vectors or textual w2v
