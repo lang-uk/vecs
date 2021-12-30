@@ -41,11 +41,15 @@ def analogy_evaluation(models_path, analogies, first_n, file_out):
     :param file_out: string
     :return: None
     """
-    csv_file = open(file_out, 'w')
-    writer = csv.writer(csv_file)
-    header = ["Model", "Type of questions", "Accuracy1 (for present questions)", "Accuracy2 (for all questions)",
-              "Number of questions", "Number of present questions", "No words in vocabulary"]
-    writer.writerow(header)
+    if path.exists(file_out):
+        csv_file = open(file_out, 'a')
+        writer = csv.writer(csv_file)
+    else:
+        csv_file = open(file_out, 'w')
+        writer = csv.writer(csv_file)
+        header = ["Model", "Type of questions", "Accuracy1 (for present questions)", "Accuracy2 (for all questions)",
+                  "Number of questions", "Number of present questions", "No words in vocabulary"]
+        writer.writerow(header)
 
     for file in glob.glob(models_path):
         if not path.isfile(file):
@@ -95,14 +99,17 @@ def analogy_evaluation(models_path, analogies, first_n, file_out):
             if total_section != 0:
                 acc, acc_general = log_evaluate_model(section_correct, total_section, len(questions), key)
                 writer.writerow([name, key.split(" ")[1], acc, acc_general, len(questions), total_section, ""])
+                csv_file.flush()
             else:
                 logger.info(f"There are no words in vocabulary for type of questions = {key}")
                 writer.writerow([name, key.split(" ")[1], "", "", len(questions), total_section, "+"])
+                csv_file.flush()
 
         # calculate and write to file total accuracy
         if present_analogies != 0:
             acc, acc_general = log_evaluate_model(total_correct, present_analogies, total_analogies, "total")
             writer.writerow([name, "total", acc, acc_general, total_analogies, present_analogies, ""])
+            csv_file.flush()
         else:
             logger.info("There are no words in vocabulary for all questions.")
 
