@@ -50,6 +50,7 @@ def analogy_evaluation(models_path, analogies, first_n, file_out):
         header = ["Model", "Type of questions", "Accuracy1 (for present questions)", "Accuracy2 (for all questions)",
                   "Number of questions", "Number of present questions", "No words in vocabulary"]
         writer.writerow(header)
+        csv_file.flush()
 
     for file in glob.glob(models_path):
         if not path.isfile(file):
